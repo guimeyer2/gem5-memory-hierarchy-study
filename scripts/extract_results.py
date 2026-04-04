@@ -1,0 +1,108 @@
+from pathlib import Path
+import csv
+
+PROJECT_DIR = Path("/Users/guimeyer/Importantes/Faculdade/5º período/AC3/gem5-memory-hierarchy-study")
+RAW_DIR = PROJECT_DIR / "results" / "raw"
+OUT_CSV = PROJECT_DIR / "results" / "tables" / "summary.csv"
+
+def read_stats(path: Path):
+    stats = {}
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        left = line.split("#", 1)[0].strip()
+        parts = left.split()
+        if len(parts) >= 2:
+            name = parts[0]
+            value = parts[1]
+            try:
+                stats[name] = float(value)
+            except ValueError:
+                pass
+    return stats
+
+def ratio(hits, misses):
+    total = hits + misses
+    return (misses / total) if total else 0.0
+
+def mpki(misses, sim_insts):
+    return (misses / (sim_insts / 1000.0)) if sim_insts else 0.0
+
+rows = []
+
+for scenario_dir in sorted(RAW_DIR.iterdir()):
+    if not scenario_dir.is_dir():
+        continue
+
+    stats_file = scenario_dir / "stats.txt"
+    if not stats_file.exists():
+        continue
+
+    s = read_stats(stats_file)
+
+    sim_insts = s.get("simInsts", 0.0)
+    num_cycles = s.get("board.processor.cores.core.numCycles", 0.0)
+    ipc = s.get("board.processor.cores.core.ipc", 0.0)
+    cpi = s.get("board.processor.cores.core.cpi", 0.0)
+
+    l1d_hits = s.get("board.cache_hierarchy.l1d-cache-0.overallHits::total", 0.0)
+    l1d_misses = s.get("board.cache_hierarchy.l1d-cache-0.overallMisses::total", 0.0)
+
+    l1i_hits = s.get("board.cache_hierarchy.l1i-cache-0.overallHits::total", 0.0)
+    l1i_misses = s.get("board.cache_hierarchy.l1i-cache-0.overallMisses::total", 0.0)
+
+    l2_hits = s.get("board.cache_hierarchy.l2-cache-0.overallHits::total", 0.0)
+    l2_misses = s.get("board.cache_hierarchy.l2-cache-0.overallMisses::total", 0.0)
+
+    rows.append({
+        "scenario": scenario_dir.name,
+        "simInsts": int(sim_insts),
+        "numCycles": int(num_cycles),
+        "ipc": round(ipc, 6),
+        "cpi": round(cpi, 6),
+        "l1d_hits": int(l1d_hits),
+        "l1d_misses": int(l1d_misses),
+        "l1d_miss_rate": round(ratio(l1d_hits, l1d_misses), 6),
+        "l1d_mpki": round(mpki(l1d_misses, sim_insts), 6),
+        "l1i_hits": int(l1i_hits),
+        "l1i_misses": int(l1i_misses),
+        "l1i_miss_rate": round(ratio(l1i_hits, l1i_misses), 6),
+        "l1i_mpki": round(mpki(l1i_misses, sim_insts), 6),
+        "l2_hits": int(l2_hits),
+        "l2_misses": int(l2_misses),
+        "l2_miss_rate": round(ratio(l2_hits, l2_misses), 6),
+        "l2_mpki": round(mpki(l2_misses, sim_insts), 6),
+    })
+
+OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
+
+fieldnames = [
+    "scenario",
+    "simInsts",
+    "numCycles",
+    "ipc",
+    "cpi",
+    "l1d_hits",
+    "l1d_misses",
+    "l1d_miss_rate",
+    "l1d_mpki",
+    "l1i_hits",
+    "l1i_misses",
+    "l1i_miss_rate",
+    "l1i_mpki",
+    "l2_hits",
+    "l2_misses",
+    "l2_miss_rate",
+    "l2_mpki",
+]
+
+with OUT_CSV.open("w", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+
+print(f"CSV gerado em: {OUT_CSV}")
+print(f"Total de cenários encontrados: {len(rows)}")
+for row in rows:
+    print(row)
