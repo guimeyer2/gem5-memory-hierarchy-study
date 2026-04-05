@@ -88,8 +88,6 @@ for experiment, scenario in SCENARIOS:
     ipc = pick(s, "board.processor.cores.core.ipc")
     cpi = pick(s, "board.processor.cores.core.cpi")
 
-    # Suporta nomenclatura do experimento padrão
-    # e do experimento de associatividade
     l1d_hits = pick(
         s,
         "board.cache_hierarchy.l1d-cache-0.overallHits::total",
@@ -123,6 +121,34 @@ for experiment, scenario in SCENARIOS:
         "board.cache_hierarchy.l2cache.overallMisses::total",
     )
 
+    l1d_avg_miss_latency = pick(
+        s,
+        "board.cache_hierarchy.l1d-cache-0.demandAvgMissLatency::total",
+        "board.cache_hierarchy.l1d-cache-0.overallAvgMissLatency::total",
+        "board.cache_hierarchy.l1dcaches.demandAvgMissLatency::total",
+        "board.cache_hierarchy.l1dcaches.overallAvgMissLatency::total",
+    )
+
+    l2_avg_miss_latency = pick(
+        s,
+        "board.cache_hierarchy.l2-cache-0.demandAvgMissLatency::total",
+        "board.cache_hierarchy.l2-cache-0.overallAvgMissLatency::total",
+        "board.cache_hierarchy.l2cache.demandAvgMissLatency::total",
+        "board.cache_hierarchy.l2cache.overallAvgMissLatency::total",
+    )
+
+    l1d_blocked_cycles_no_mshrs = pick(
+        s,
+        "board.cache_hierarchy.l1d-cache-0.blockedCycles::no_mshrs",
+        "board.cache_hierarchy.l1dcaches.blockedCycles::no_mshrs",
+    )
+
+    l2_blocked_cycles_no_mshrs = pick(
+        s,
+        "board.cache_hierarchy.l2-cache-0.blockedCycles::no_mshrs",
+        "board.cache_hierarchy.l2cache.blockedCycles::no_mshrs",
+    )
+
     baseline_name = BASELINES[scenario]
     baseline_cycles = all_stats[baseline_name].get("board.processor.cores.core.numCycles", 0.0)
     speedup = (baseline_cycles / num_cycles) if num_cycles else 0.0
@@ -148,6 +174,10 @@ for experiment, scenario in SCENARIOS:
         "l2_misses": int(l2_misses),
         "l2_miss_rate": round(ratio(l2_hits, l2_misses), 6),
         "l2_mpki": round(mpki(l2_misses, sim_insts), 6),
+        "l1d_avg_miss_latency": round(l1d_avg_miss_latency, 6),
+        "l2_avg_miss_latency": round(l2_avg_miss_latency, 6),
+        "l1d_blocked_cycles_no_mshrs": int(l1d_blocked_cycles_no_mshrs),
+        "l2_blocked_cycles_no_mshrs": int(l2_blocked_cycles_no_mshrs),
     })
 
 OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
@@ -173,6 +203,10 @@ fieldnames = [
     "l2_misses",
     "l2_miss_rate",
     "l2_mpki",
+    "l1d_avg_miss_latency",
+    "l2_avg_miss_latency",
+    "l1d_blocked_cycles_no_mshrs",
+    "l2_blocked_cycles_no_mshrs",
 ]
 
 with OUT_CSV.open("w", newline="") as f:
