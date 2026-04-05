@@ -54,6 +54,12 @@ def read_stats(path: Path):
                 pass
     return stats
 
+def pick(stats, *names, default=0.0):
+    for name in names:
+        if name in stats:
+            return stats[name]
+    return default
+
 def ratio(hits, misses):
     total = hits + misses
     return (misses / total) if total else 0.0
@@ -77,19 +83,45 @@ for experiment, scenario in SCENARIOS:
         continue
 
     s = all_stats[scenario]
-    sim_insts = s.get("simInsts", 0.0)
-    num_cycles = s.get("board.processor.cores.core.numCycles", 0.0)
-    ipc = s.get("board.processor.cores.core.ipc", 0.0)
-    cpi = s.get("board.processor.cores.core.cpi", 0.0)
+    sim_insts = pick(s, "simInsts")
+    num_cycles = pick(s, "board.processor.cores.core.numCycles")
+    ipc = pick(s, "board.processor.cores.core.ipc")
+    cpi = pick(s, "board.processor.cores.core.cpi")
 
-    l1d_hits = s.get("board.cache_hierarchy.l1d-cache-0.overallHits::total", 0.0)
-    l1d_misses = s.get("board.cache_hierarchy.l1d-cache-0.overallMisses::total", 0.0)
+    # Suporta nomenclatura do experimento padrão
+    # e do experimento de associatividade
+    l1d_hits = pick(
+        s,
+        "board.cache_hierarchy.l1d-cache-0.overallHits::total",
+        "board.cache_hierarchy.l1dcaches.overallHits::total",
+    )
+    l1d_misses = pick(
+        s,
+        "board.cache_hierarchy.l1d-cache-0.overallMisses::total",
+        "board.cache_hierarchy.l1dcaches.overallMisses::total",
+    )
 
-    l1i_hits = s.get("board.cache_hierarchy.l1i-cache-0.overallHits::total", 0.0)
-    l1i_misses = s.get("board.cache_hierarchy.l1i-cache-0.overallMisses::total", 0.0)
+    l1i_hits = pick(
+        s,
+        "board.cache_hierarchy.l1i-cache-0.overallHits::total",
+        "board.cache_hierarchy.l1icaches.overallHits::total",
+    )
+    l1i_misses = pick(
+        s,
+        "board.cache_hierarchy.l1i-cache-0.overallMisses::total",
+        "board.cache_hierarchy.l1icaches.overallMisses::total",
+    )
 
-    l2_hits = s.get("board.cache_hierarchy.l2-cache-0.overallHits::total", 0.0)
-    l2_misses = s.get("board.cache_hierarchy.l2-cache-0.overallMisses::total", 0.0)
+    l2_hits = pick(
+        s,
+        "board.cache_hierarchy.l2-cache-0.overallHits::total",
+        "board.cache_hierarchy.l2cache.overallHits::total",
+    )
+    l2_misses = pick(
+        s,
+        "board.cache_hierarchy.l2-cache-0.overallMisses::total",
+        "board.cache_hierarchy.l2cache.overallMisses::total",
+    )
 
     baseline_name = BASELINES[scenario]
     baseline_cycles = all_stats[baseline_name].get("board.processor.cores.core.numCycles", 0.0)

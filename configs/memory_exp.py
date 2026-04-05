@@ -23,7 +23,7 @@ args = parser.parse_args()
 cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
     l1d_size="16KiB",
     l1i_size="16KiB",
-    l2_size="64KiB",
+    l2_size="32KiB",
 )
 
 if args.mem == "ddr3_1600":
