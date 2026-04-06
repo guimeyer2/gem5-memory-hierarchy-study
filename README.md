@@ -4,7 +4,7 @@ Projeto da disciplina de Arquitetura de Computadores para estudo da hierarquia d
 
 ## Objetivo
 
-Investigar o impacto de parâmetros de cache no desempenho e no comportamento de memória em um workload com padrão de acesso à memória mais representativo.
+Investigar o impacto de parâmetros da hierarquia de memória no desempenho e no comportamento de memória em um workload com padrão de acesso à memória mais representativo.
 
 ## Estrutura do repositório
 
@@ -40,6 +40,18 @@ Os cenários usados na análise final do trabalho são:
 - `matmul_l2b_128k`
 - `matmul_l2b_256k`
 
+#### Experimento C, configuração da memória principal
+
+- `matmul_mem_ddr3_1600`
+- `matmul_mem_ddr3_2133`
+- `matmul_mem_ddr4_2400`
+
+#### Experimento D, associatividade da L1D
+
+- `matmul_assoc_l1d2`
+- `matmul_assoc_l1d4`
+- `matmul_assoc_l1d8`
+
 A tabela consolidada oficial para gráficos e artigo está em:
 
 `results/tables/final_summary.csv`
@@ -47,6 +59,20 @@ A tabela consolidada oficial para gráficos e artigo está em:
 ## Workload
 
 O workload principal utilizado na análise final foi `x86-matrix-multiply`.
+
+## Métricas disponíveis
+
+A tabela final consolidada inclui:
+
+- hits e misses
+- miss rate
+- MPKI
+- IPC
+- CPI
+- numCycles
+- speedup
+- latência média de miss da L1D
+- latência média de miss da L2
 
 ## Como reproduzir
 
@@ -59,4 +85,12 @@ Ter o gem5 compilado localmente.
 ```bash
 ./scripts/run_l1.sh
 ./scripts/run_l2.sh
+./scripts/run_mem.sh
+./scripts/run_assoc.sh
+```
+
+### Caso seja necessário regerar a tabela final
+
+```bash
+python3 scripts/extract_final_results.py
 ```
